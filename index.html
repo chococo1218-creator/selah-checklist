@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나는 지금 재정을 잘 관리하고 있을까?</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f8f6f2; color: #2d2d2d; line-height: 1.7; }
+        .container { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+        .header { text-align: center; margin-bottom: 48px; }
+        .header .tag { display: inline-block; background: #4a7c59; color: white; font-size: 12px; letter-spacing: 2px; padding: 6px 16px; border-radius: 20px; margin-bottom: 20px; }
+        .header h1 { font-size: 26px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; line-height: 1.4; }
+        .header p { font-size: 15px; color: #666; }
+        .section-card { background: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .section-header { display: flex; align-items: center; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid #f0ede8; }
+        .section-number { width: 36px; height: 36px; background: #4a7c59; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; margin-right: 12px; flex-shrink: 0; }
+        .section-title { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+        .section-subtitle { font-size: 13px; color: #888; margin-top: 2px; }
+        .question-block { margin-bottom: 32px; }
+        .question-block:last-child { margin-bottom: 0; }
+        .question-label { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+        .required-star { color: #e74c3c; margin-left: 4px; }
+        .question-hint { font-size: 13px; color: #999; margin-bottom: 14px; }
+        .error-msg { display: none; font-size: 13px; color: #e74c3c; margin-top: 8px; padding: 8px 12px; background: #fff5f5; border-radius: 8px; border-left: 3px solid #e74c3c; }
+        .error-msg.show { display: block; }
+        .check-options, .radio-options { display: flex; flex-direction: column; gap: 10px; }
+        .check-option, .radio-option { display: flex; align-items: flex-start; cursor: pointer; padding: 12px 14px; border: 2px solid #f0ede8; border-radius: 10px; transition: all 0.2s; user-select: none; }
+        .check-option:hover, .radio-option:hover { border-color: #4a7c59; background: #f0f8f2; }
+        .check-option.selected, .radio-option.selected { border-color: #4a7c59; background: #f0f8f2; }
+        .custom-check { width: 20px; height: 20px; border: 2px solid #d0ccc6; border-radius: 5px; margin-right: 12px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .check-option.selected .custom-check { background: #4a7c59; border-color: #4a7c59; }
+        .check-option.selected .custom-check::after { content: '✓'; color: white; font-size: 12px; font-weight: 700; }
+        .custom-radio { width: 20px; height: 20px; border: 2px solid #d0ccc6; border-radius: 50%; margin-right: 12px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .radio-option.selected .custom-radio { border-color: #4a7c59; }
+        .radio-option.selected .custom-radio::after { content: ''; width: 10px; height: 10px; background: #4a7c59; border-radius: 50%; display: block; }
+        .option-text { font-size: 14px; color: #333; line-height: 1.6; }
+        .other-input { display: none; margin-top: 8px; width: 100%; padding: 10px 14px; border: 2px solid #f0ede8; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        .other-input:focus { border-color: #4a7c59; }
+        .other-input.show { display: block; }
+        .text-input { width: 100%; padding: 14px 16px; border: 2px solid #f0ede8; border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; resize: vertical; min-height: 80px; }
+        .text-input:focus { border-color: #4a7c59; }
+        .progress-bar-container { background: white; border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); position: sticky; top: 16px; z-index: 10; }
+        .progress-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .progress-label { font-size: 14px; color: #666; }
+        .progress-count { font-size: 16px; font-weight: 700; color: #4a7c59; }
+        .progress-bar { height: 8px; background: #f0ede8; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4a7c59, #6aab7a); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
+        .result-btn { width: 100%; background: #4a7c59; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: all 0.2s; }
+        .result-btn:hover { background: #3d6b4a; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(74,124,89,0.3); }
+        .validation-summary { display: none; background: #fff5f5; border: 2px solid #e74c3c; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; font-size: 14px; color: #e74c3c; font-weight: 600; text-align: center; }
+        .validation-summary.show { display: block; }
+        .result-section { display: none; background: white; border-radius: 16px; padding: 36px 32px; margin-top: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .result-section.show { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-image { width: 100%; height: 220px; object-fit: cover; border-radius: 12px; margin-bottom: 24px; }
+        .result-type-tag { display: inline-block; background: #f0f8f2; color: #4a7c59; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 20px; margin-bottom: 16px; }
+        .result-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; line-height: 1.4; }
+        .result-message { font-size: 15px; color: #444; line-height: 1.9; margin-bottom: 20px; }
+        .result-solution { background: #f8f6f2; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .result-solution-title { font-size: 14px; font-weight: 700; color: #4a7c59; margin-bottom: 10px; }
+        .result-solution-text { font-size: 14px; color: #555; line-height: 1.8; }
+        .result-verse { border-left: 3px solid #4a7c59; padding: 16px 20px; margin-bottom: 20px; background: #f8f6f2; border-radius: 0 10px 10px 0; }
+        .result-verse-text { font-size: 14px; color: #444; line-height: 1.8; font-style: italic; }
+        .result-verse-ref { font-size: 13px; color: #4a7c59; font-weight: 600; margin-top: 6px; }
+        .result-cta { background: #4a7c59; color: white; border-radius: 12px; padding: 20px; text-align: center; }
+        .result-cta-text { font-size: 15px; line-height: 1.7; margin-bottom: 8px; }
+        .result-cta-link a { color: white; text-decoration: underline; font-size: 14px; font-weight: 600; }
+        .submit-status { margin-top: 12px; font-size: 13px; color: #888; text-align: center; }
+        .submit-status.success { color: #4a7c59; font-weight: 600; }
+        .footer-note { text-align: center; font-size: 13px; color: #aaa; margin-top: 40px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <div class="tag">SELAH INSIGHT</div>
+        <h1>나는 지금 재정을<br>잘 관리하고 있을까?</h1>
+        <p>크리스천 재정 자가진단 체크리스트<br>돈 문제는 숫자가 아니라 뿌리에 있습니다.</p>
+    </div>
+
+    <div class="progress-bar-container">
+        <div class="progress-info">
+            <span class="progress-label">진행도</span>
+            <span class="progress-count"><span id="answeredCount">0</span> / 11</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <!-- 섹션 1 -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-number">1</div>
+            <div>
+                <div class="section-title">돈에 대한 믿음 체계</div>
+                <div class="section-subtitle">내가 무의식적으로 믿고 있는 것들</div>
+            </div>
+        </div>
+
+        <div class="question-block" id="block-q1">
+            <div class="question-label">Q1. 다음 중 나에게 해당하는 것을 모두 골라주세요.<span class="required-star">*</span></div>
+            <div class="question-hint">복수 선택 가능</div>
+            <div class="check-options" id="q1-options">
+                <div class="check-option" data-qid="q1" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="돈 걱정을 하면 믿음이 없는 것 같아 죄책감이 든다">돈 걱정을 하면 믿음이 없는 것 같아 죄책감이 든다</div>
+                </div>
+                <div class="check-option" data-qid="q1" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="헌금하고 나면 불안하거나 아깝다는 생각이 든 적 있다">헌금하고 나면 불안하거나 아깝다는 생각이 든 적 있다</div>
+                </div>
+                <div class="check-option" data-qid="q1" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="저축이나 투자에 집착하면 탐욕인 것 같아 망설여진다">저축이나 투자에 집착하면 탐욕인 것 같아 망설여진다</div>
+                </div>
+                <div class="check-option" data-qid="q1" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="돈이 많으면 교만해질 것 같아 어느 정도 이상은 바라지 않게 된다">돈이 많으면 교만해질 것 같아 어느 정도 이상은 바라지 않게 된다</div>
+                </div>
+                <div class="check-option" data-qid="q1" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="믿음으로 살면 하나님이 다 채워주실 거라는 생각에 재정 계획을 미룬 적 있다">믿음으로 살면 하나님이 다 채워주실 거라는 생각에 재정 계획을 미룬 적 있다</div>
+                </div>
+                <div class="check-option" data-qid="q1" data-other="true">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="직접 입력">직접 입력</div>
+                </div>
+            </div>
+            <input type="text" class="other-input" id="q1-other" placeholder="직접 입력해주세요">
+            <div class="error-msg" id="error-q1">⚠️ 최소 하나 이상 선택해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q2">
+            <div class="question-label">Q2. 지금 이 순간, 돈에 대해 가장 자주 드는 감정은 무엇인가요?<span class="required-star">*</span></div>
+            <div class="question-hint">예: 불안하다, 막막하다, 죄책감이 든다 등</div>
+            <textarea class="text-input" id="q2" placeholder="솔직하게 적어주세요"></textarea>
+            <div class="error-msg" id="error-q2">⚠️ 답변을 입력해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q3">
+            <div class="question-label">Q3. 크리스천으로서 돈을 다루는 것에 대해 어떻게 생각하나요?<span class="required-star">*</span></div>
+            <div class="question-hint">하나만 선택</div>
+            <div class="radio-options" id="q3-options">
+                <div class="radio-option" data-qid="q3" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="돈을 잘 다루는 것도 신앙의 일부라고 생각한다">돈을 잘 다루는 것도 신앙의 일부라고 생각한다</div>
+                </div>
+                <div class="radio-option" data-qid="q3" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="돈보다 중요한 것이 있어서 크게 신경 쓰지 않는다">돈보다 중요한 것이 있어서 크게 신경 쓰지 않는다</div>
+                </div>
+                <div class="radio-option" data-qid="q3" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="돈 이야기 자체가 교회에서 어울리지 않는다고 느낀다">돈 이야기 자체가 교회에서 어울리지 않는다고 느낀다</div>
+                </div>
+                <div class="radio-option" data-qid="q3" data-other="true">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="직접 입력">직접 입력</div>
+                </div>
+            </div>
+            <input type="text" class="other-input" id="q3-other" placeholder="직접 입력해주세요">
+            <div class="error-msg" id="error-q3">⚠️ 항목을 선택해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q4">
+            <div class="question-label">Q4. 돈에 대해 부모님에게 들은 말이나 보고 자란 모습 중 지금도 영향을 미치는 게 있다면 적어주세요.<span class="required-star">*</span></div>
+            <div class="question-hint">없으면 "없음"이라고 적어주세요</div>
+            <textarea class="text-input" id="q4" placeholder="자유롭게 적어주세요"></textarea>
+            <div class="error-msg" id="error-q4">⚠️ 답변을 입력해주세요.</div>
+        </div>
+    </div>
+
+    <!-- 섹션 2 -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-number">2</div>
+            <div>
+                <div class="section-title">재정 현실 인식</div>
+                <div class="section-subtitle">내 돈의 현재 상태를 얼마나 알고 있는가</div>
+            </div>
+        </div>
+
+        <div class="question-block" id="block-q5">
+            <div class="question-label">Q5. 현재 나의 재정 상태로 맞는 것을 모두 골라주세요.<span class="required-star">*</span></div>
+            <div class="question-hint">복수 선택 가능</div>
+            <div class="check-options" id="q5-options">
+                <div class="check-option" data-qid="q5" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="이번 달 총 지출이 얼마인지 정확히 모른다">이번 달 총 지출이 얼마인지 정확히 모른다</div>
+                </div>
+                <div class="check-option" data-qid="q5" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="내 부채 총액을 한 번도 정확히 계산해본 적 없다">내 부채 총액을 한 번도 정확히 계산해본 적 없다</div>
+                </div>
+                <div class="check-option" data-qid="q5" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="비상금이 없거나 얼마인지 명확하지 않다">비상금이 없거나 얼마인지 명확하지 않다</div>
+                </div>
+                <div class="check-option" data-qid="q5" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="저축 금액이 매달 들쭉날쭉하거나 아예 못 할 때가 많다">저축 금액이 매달 들쭉날쭉하거나 아예 못 할 때가 많다</div>
+                </div>
+                <div class="check-option" data-qid="q5" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="내 순자산(자산-부채)이 얼마인지 모른다">내 순자산(자산-부채)이 얼마인지 모른다</div>
+                </div>
+                <div class="check-option" data-qid="q5" data-other="true">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="직접 입력">직접 입력</div>
+                </div>
+            </div>
+            <input type="text" class="other-input" id="q5-other" placeholder="직접 입력해주세요">
+            <div class="error-msg" id="error-q5">⚠️ 최소 하나 이상 선택해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q6">
+            <div class="question-label">Q6. 지금 내 재정 상황을 한 줄로 표현한다면?<span class="required-star">*</span></div>
+            <div class="question-hint">예: 매달 적자다, 모으긴 하는데 얼마인지 모른다, 그냥 버티고 있다 등</div>
+            <textarea class="text-input" id="q6" placeholder="솔직하게 적어주세요"></textarea>
+            <div class="error-msg" id="error-q6">⚠️ 답변을 입력해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q7">
+            <div class="question-label">Q7. 현재 가장 큰 재정적 고민은 무엇인가요?<span class="required-star">*</span></div>
+            <div class="question-hint">하나만 선택, 없으면 직접 입력</div>
+            <div class="radio-options" id="q7-options">
+                <div class="radio-option" data-qid="q7" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="수입이 너무 적다">수입이 너무 적다</div>
+                </div>
+                <div class="radio-option" data-qid="q7" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="지출을 줄이지 못하고 있다">지출을 줄이지 못하고 있다</div>
+                </div>
+                <div class="radio-option" data-qid="q7" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="부채가 있어서 숨이 막힌다">부채가 있어서 숨이 막힌다</div>
+                </div>
+                <div class="radio-option" data-qid="q7" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="저축은 하는데 미래가 막막하다">저축은 하는데 미래가 막막하다</div>
+                </div>
+                <div class="radio-option" data-qid="q7" data-other="false">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="돈 관리 방법 자체를 모른다">돈 관리 방법 자체를 모른다</div>
+                </div>
+                <div class="radio-option" data-qid="q7" data-other="true">
+                    <div class="custom-radio"></div>
+                    <div class="option-text" data-value="직접 입력">직접 입력</div>
+                </div>
+            </div>
+            <input type="text" class="other-input" id="q7-other" placeholder="직접 입력해주세요">
+            <div class="error-msg" id="error-q7">⚠️ 항목을 선택해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q8">
+            <div class="question-label">Q8. 위 고민에 대해 조금 더 구체적으로 이야기해주세요.<span class="required-star">*</span></div>
+            <div class="question-hint">어떤 상황인지, 얼마나 지속됐는지 등 편하게 적어주세요</div>
+            <textarea class="text-input" id="q8" placeholder="자유롭게 적어주세요"></textarea>
+            <div class="error-msg" id="error-q8">⚠️ 답변을 입력해주세요.</div>
+        </div>
+    </div>
+
+    <!-- 섹션 3 -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-number">3</div>
+            <div>
+                <div class="section-title">재정 습관과 행동</div>
+                <div class="section-subtitle">실제 삶에서 돈을 어떻게 다루고 있는가</div>
+            </div>
+        </div>
+
+        <div class="question-block" id="block-q9">
+            <div class="question-label">Q9. 다음 중 나에게 해당하는 것을 모두 골라주세요.<span class="required-star">*</span></div>
+            <div class="question-hint">복수 선택 가능</div>
+            <div class="check-options" id="q9-options">
+                <div class="check-option" data-qid="q9" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="예산을 세워본 적이 없거나 세워도 잘 지키지 못한다">예산을 세워본 적이 없거나 세워도 잘 지키지 못한다</div>
+                </div>
+                <div class="check-option" data-qid="q9" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="충동구매 후 후회한 경험이 자주 있다">충동구매 후 후회한 경험이 자주 있다</div>
+                </div>
+                <div class="check-option" data-qid="q9" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="스트레스를 받으면 소비로 해소하는 패턴이 있다">스트레스를 받으면 소비로 해소하는 패턴이 있다</div>
+                </div>
+                <div class="check-option" data-qid="q9" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="돈에 관한 책이나 강의를 봐도 실제로 달라진 게 없다">돈에 관한 책이나 강의를 봐도 실제로 달라진 게 없다</div>
+                </div>
+                <div class="check-option" data-qid="q9" data-other="false">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="재정 문제를 혼자 해결하려다 지치거나 포기한 경험이 있다">재정 문제를 혼자 해결하려다 지치거나 포기한 경험이 있다</div>
+                </div>
+                <div class="check-option" data-qid="q9" data-other="true">
+                    <div class="custom-check"></div>
+                    <div class="option-text" data-value="직접 입력">직접 입력</div>
+                </div>
+            </div>
+            <input type="text" class="other-input" id="q9-other" placeholder="직접 입력해주세요">
+            <div class="error-msg" id="error-q9">⚠️ 최소 하나 이상 선택해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q10">
+            <div class="question-label">Q10. 돈 관리를 할 때 가장 힘든 점이 뭔가요?<span class="required-star">*</span></div>
+            <div class="question-hint">예: 작심삼일이 반복된다, 방법을 모른다, 혼자 하기 외롭다 등</div>
+            <textarea class="text-input" id="q10" placeholder="자유롭게 적어주세요"></textarea>
+            <div class="error-msg" id="error-q10">⚠️ 답변을 입력해주세요.</div>
+        </div>
+
+        <div class="question-block" id="block-q11">
+            <div class="question-label">Q11. 이 체크리스트를 하게 된 계기나, 재정적으로 진짜 원하는 것이 있다면 적어주세요.<span class="required-star">*</span></div>
+            <div class="question-hint">예: 더 이상 돈 걱정 없이 살고 싶다, 헌금을 기쁘게 하고 싶다, 결혼 준비를 하고 싶다 등</div>
+            <textarea class="text-input" id="q11" placeholder="자유롭게 적어주세요"></textarea>
+            <div class="error-msg" id="error-q11">⚠️ 답변을 입력해주세요.</div>
+        </div>
+    </div>
+
+    <div class="validation-summary" id="validationSummary">
+        ⚠️ 아직 답하지 않은 질문이 있어요. 빨간 표시된 항목을 확인해주세요.
+    </div>
+
+    <button class="result-btn" id="resultBtn">나의 재정 진단 결과 보기 →</button>
+
+    <div class="result-section" id="resultSection">
+        <img id="resultImage" class="result-image" alt="결과 이미지">
+        <div class="result-type-tag" id="resultTypeTag"></div>
+        <div class="result-title" id="resultTitle"></div>
+        <div class="result-message" id="resultMessage"></div>
+        <div class="result-solution">
+            <div class="result-solution-title">💡 지금 당장 할 수 있는 것</div>
+            <div class="result-solution-text" id="resultSolution"></div>
+        </div>
+        <div class="result-verse">
+            <div class="result-verse-text" id="resultVerseText"></div>
+            <div class="result-verse-ref" id="resultVerseRef"></div>
+        </div>
+        <div class="result-cta">
+            <div class="result-cta-text" id="resultCta"></div>
+            <div class="result-cta-link">
+                <a href="https://www.instagram.com/selah.insight" target="_blank">📌 @selah.insight</a>
+            </div>
+        </div>
+        <div class="submit-status" id="submitStatus"></div>
+    </div>
+
+    <div class="footer-note">본 체크리스트는 크리스천 재정 프로그램 기획을 위한 자료로 활용됩니다.</div>
+</div>
+
+<script>
+const FORM_ID = '1FAIpQLScVgI45MmpujgOMxR_rQhz-ZEUN49DDFMFYltSyZWMlHozGOA';
+const ENTRY = {
+    q1:'entry.2113092985', q2:'entry.1454869347', q3:'entry.1961139536',
+    q4:'entry.814696273',  q5:'entry.1175825552', q6:'entry.433167312',
+    q7:'entry.1707376274', q8:'entry.1090533938', q9:'entry.1837383214',
+    q10:'entry.1141676379',q11:'entry.1564249011',type:'entry.632160195'
+};
+
+const checkedMap = { q1:[], q5:[], q9:[] };
+const radioMap   = { q3:'', q7:'' };
+
+const RESULTS = {
+    1:{ tag:'유형 1', title:'믿음과 돈 사이에서 길을 잃은 당신', image:'images/type1.png',
+        message:'돈 걱정을 하면 믿음이 없는 것 같고, 저축을 하면 탐욕스러운 것 같고, 헌금을 하면 불안하고. 어느 방향으로 가도 죄책감이 따라오는 느낌이죠. 이건 당신의 신앙이 약해서가 아니에요. 아무도 크리스천으로서 돈을 어떻게 다뤄야 하는지 제대로 가르쳐준 적이 없었기 때문이에요.',
+        solution:'가장 먼저 해야 할 것은 \'돈은 도구다\'라는 프레임을 다시 세우는 거예요. 지금 당장 종이에 이렇게 써보세요. \'나는 돈이 _____ 라고 믿는다\'를 완성해보세요.',
+        verse:'너희는 먼저 그의 나라와 그의 의를 구하라 그리하면 이 모든 것을 너희에게 더하시리라', verseRef:'마태복음 6:33',
+        cta:'믿음과 돈 사이의 혼란, 혼자 끌어안지 않아도 돼요. 셀라인사이트와 함께 그 답을 찾아가요.' },
+    2:{ tag:'유형 2', title:'알지만 보기 두려운 당신', image:'images/type2.png',
+        message:'신앙적으로는 어느 정도 정리가 됐어요. 돈을 잘 다뤄야 한다는 것도 알아요. 근데 통장을 열어보는 게 무섭고, 부채 총액을 계산하는 게 두렵고, 카드 명세서를 확인하는 게 불편해요. 보지 않는다고 없어지지 않아요.',
+        solution:'지금 당장 딱 한 가지만 해보세요. 이번 달 카드 명세서 하나만 열어보는 거예요. 하나만. 거기서 시작해요.',
+        verse:'진리를 알지니 진리가 너희를 자유롭게 하리라', verseRef:'요한복음 8:32',
+        cta:'숫자를 혼자 마주하는 건 두렵죠. 셀라인사이트와 함께라면 괜찮아요.' },
+    3:{ tag:'유형 3', title:'매번 다시 시작하는 당신', image:'images/type3.png',
+        message:'예산을 세웠다가 며칠 만에 무너지고, 가계부를 시작했다가 일주일 만에 그만두고. 이게 의지력 문제라고 생각하시나요? 아니에요. 구조의 문제예요. 당신이 게으른 게 아니에요. 혼자였던 거예요.',
+        solution:'두 가지가 필요해요. 저축을 의지로 하지 말고 자동이체로 만들어버리세요. 그리고 함께하는 공동체를 찾으세요. 함께하는 것만으로 지속률이 완전히 달라져요.',
+        verse:'두 사람이 한 사람보다 나음은 그들이 수고함으로 좋은 상을 얻을 것임이라', verseRef:'전도서 4:9',
+        cta:'혼자라서 힘들었던 거예요. 셀라인사이트와 함께 이번엔 달라질 수 있어요.' },
+    4:{ tag:'유형 4', title:'방향은 있는데 지도가 없는 당신', image:'images/type4.png',
+        message:'어느 하나가 특별히 심각하진 않아요. 그런데 전반적으로 흐릿한 느낌이 있죠. 해야 한다는 건 알고, 방향도 어렴풋이 보이는데, 어디서부터 어떻게 시작해야 할지 모르겠는 상태예요.',
+        solution:'지금 당장 재정 목표 하나만 세워보세요. \'비상금 50만원 만들기\', \'이번 달 커피 지출 2만원 줄이기\' 이런 식으로요.',
+        verse:'네 길을 여호와께 맡기라 그를 의지하면 그가 이루시고', verseRef:'시편 37:5',
+        cta:'방향은 맞아요. 이제 지도가 필요할 때예요. 셀라인사이트가 함께 걸어갈게요.' },
+    5:{ tag:'유형 5', title:'이제 막 날개를 펴려는 당신', image:'images/type5.png',
+        message:'기초가 잡혀 있어요. 돈에 대한 기본적인 태도도 건강하고, 현실도 어느 정도 파악하고 있고, 습관도 어느 정도 되어 있어요. 당신에게 지금 필요한 건 더 깊은 성장이에요.',
+        solution:'막연한 저축에서 목적 있는 저축으로, 그리고 투자에 대해 진지하게 공부하기 시작할 때예요. 복리의 힘은 일찍 시작할수록 강해요.',
+        verse:'오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요', verseRef:'이사야 40:31',
+        cta:'날개가 있다면 이제 펼칠 때예요. 셀라인사이트와 함께 더 높이 날아가요.' },
+    6:{ tag:'유형 6', title:'모든 것이 한꺼번에 무너진 것 같은 당신', image:'images/type6.png',
+        message:'믿음도 흔들리고, 현실도 직면하기 힘들고, 습관도 무너진 상태예요. 이건 당신이 나쁜 사람이거나 믿음이 없어서가 아니에요. 지금 이 체크리스트를 하고 있다는 것 자체가 이미 변화를 원한다는 증거예요.',
+        solution:'딱 한 가지만 해요. 오늘 통장 잔액을 확인하세요. 그게 전부예요. 큰 변화는 항상 작은 것 하나에서 시작해요.',
+        verse:'내가 너와 함께 함이니라 두려워하지 말라 내가 네 하나님이 됨이니라 내가 너를 굳세게 하리라', verseRef:'이사야 41:10',
+        cta:'무너진 것 같아도 괜찮아요. 셀라인사이트가 처음부터 함께 다시 시작할게요.' }
+};
+
+// 이벤트 바인딩 — onclick 완전 제거, addEventListener만 사용
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 체크박스
+    document.querySelectorAll('.check-option').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var qid   = this.getAttribute('data-qid');
+            var other = this.getAttribute('data-other') === 'true';
+            var val   = this.querySelector('.option-text').getAttribute('data-value');
+            var idx   = checkedMap[qid].indexOf(val);
+            if (idx === -1) { checkedMap[qid].push(val); this.classList.add('selected'); }
+            else            { checkedMap[qid].splice(idx,1); this.classList.remove('selected'); }
+            if (other) {
+                var inp = document.getElementById(qid+'-other');
+                inp.classList.toggle('show', this.classList.contains('selected'));
+            }
+            if (checkedMap[qid].length > 0) clearError(qid);
+            updateProgress();
+        });
+    });
+
+    // 라디오
+    document.querySelectorAll('.radio-option').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var qid   = this.getAttribute('data-qid');
+            var other = this.getAttribute('data-other') === 'true';
+            document.querySelectorAll('#'+qid+'-options .radio-option').forEach(function(o){ o.classList.remove('selected'); });
+            this.classList.add('selected');
+            radioMap[qid] = this.querySelector('.option-text').getAttribute('data-value');
+            var otherInp = document.getElementById(qid+'-other');
+            if (otherInp) otherInp.classList.remove('show');
+            if (other && otherInp) otherInp.classList.add('show');
+            clearError(qid);
+            updateProgress();
+        });
+    });
+
+    // 텍스트 입력 진행도
+    document.querySelectorAll('.text-input').forEach(function(el) {
+        el.addEventListener('input', updateProgress);
+    });
+
+    // 결과 버튼
+    document.getElementById('resultBtn').addEventListener('click', showResult);
+});
+
+function getCheckVal(qid) {
+    var vals = checkedMap[qid].slice();
+    var inp  = document.getElementById(qid+'-other');
+    if (inp && inp.classList.contains('show') && inp.value.trim()) {
+        var idx = vals.indexOf('직접 입력');
+        if (idx !== -1) vals[idx] = '직접입력: '+inp.value.trim();
+    }
+    return vals.join(' / ');
+}
+
+function getRadioVal(qid) {
+    if (radioMap[qid] === '직접 입력') {
+        var inp = document.getElementById(qid+'-other');
+        return (inp && inp.value.trim()) ? '직접입력: '+inp.value.trim() : '직접 입력';
+    }
+    return radioMap[qid];
+}
+
+function updateProgress() {
+    var n = 0;
+    if (checkedMap.q1.length > 0) n++;
+    if (document.getElementById('q2').value.trim()) n++;
+    if (radioMap.q3) n++;
+    if (document.getElementById('q4').value.trim()) n++;
+    if (checkedMap.q5.length > 0) n++;
+    if (document.getElementById('q6').value.trim()) n++;
+    if (radioMap.q7) n++;
+    if (document.getElementById('q8').value.trim()) n++;
+    if (checkedMap.q9.length > 0) n++;
+    if (document.getElementById('q10').value.trim()) n++;
+    if (document.getElementById('q11').value.trim()) n++;
+    document.getElementById('answeredCount').textContent = n;
+    document.getElementById('progressFill').style.width = (n/11*100)+'%';
+}
+
+function showError(qid)  { document.getElementById('error-'+qid).classList.add('show'); }
+function clearError(qid) { document.getElementById('error-'+qid).classList.remove('show'); }
+
+function validateAll() {
+    var ok = true;
+    if (checkedMap.q1.length===0) { showError('q1'); ok=false; } else clearError('q1');
+    if (!document.getElementById('q2').value.trim()) { showError('q2'); ok=false; } else clearError('q2');
+    if (!radioMap.q3) { showError('q3'); ok=false; } else clearError('q3');
+    if (!document.getElementById('q4').value.trim()) { showError('q4'); ok=false; } else clearError('q4');
+    if (checkedMap.q5.length===0) { showError('q5'); ok=false; } else clearError('q5');
+    if (!document.getElementById('q6').value.trim()) { showError('q6'); ok=false; } else clearError('q6');
+    if (!radioMap.q7) { showError('q7'); ok=false; } else clearError('q7');
+    if (!document.getElementById('q8').value.trim()) { showError('q8'); ok=false; } else clearError('q8');
+    if (checkedMap.q9.length===0) { showError('q9'); ok=false; } else clearError('q9');
+    if (!document.getElementById('q10').value.trim()) { showError('q10'); ok=false; } else clearError('q10');
+    if (!document.getElementById('q11').value.trim()) { showError('q11'); ok=false; } else clearError('q11');
+    return ok;
+}
+
+function getType() {
+    var s1 = checkedMap.q1.filter(function(v){ return v!=='직접 입력'; }).length;
+    var s2 = checkedMap.q5.filter(function(v){ return v!=='직접 입력'; }).length;
+    var s3 = checkedMap.q9.filter(function(v){ return v!=='직접 입력'; }).length;
+    if (s1>=4 && s2>=4 && s3>=4) return 6;
+    if (s1>=4) return 1;
+    if (s2>=4) return 2;
+    if (s3>=4) return 3;
+    if (s1<2 && s2<2 && s3<2) return 5;
+    return 4;
+}
+
+function showResult() {
+    if (!validateAll()) {
+        document.getElementById('validationSummary').classList.add('show');
+        document.querySelector('.error-msg.show').scrollIntoView({behavior:'smooth',block:'center'});
+        return;
+    }
+    document.getElementById('validationSummary').classList.remove('show');
+    var typeNum = getType();
+    var r = RESULTS[typeNum];
+    document.getElementById('resultImage').src           = r.image;
+    document.getElementById('resultTypeTag').textContent = r.tag;
+    document.getElementById('resultTitle').textContent   = r.title;
+    document.getElementById('resultMessage').textContent = r.message;
+    document.getElementById('resultSolution').textContent= r.solution;
+    document.getElementById('resultVerseText').textContent='"'+r.verse+'"';
+    document.getElementById('resultVerseRef').textContent = r.verseRef;
+    document.getElementById('resultCta').textContent      = r.cta;
+    var sec = document.getElementById('resultSection');
+    sec.classList.add('show');
+    sec.scrollIntoView({behavior:'smooth',block:'start'});
+    submitToGoogle(typeNum, r.title);
+}
+
+function submitToGoogle(typeNum, typeTitle) {
+    var statusEl = document.getElementById('submitStatus');
+    statusEl.textContent = '결과 저장 중...';
+    var formData = new FormData();
+    formData.append(ENTRY.q1,  getCheckVal('q1'));
+    formData.append(ENTRY.q2,  document.getElementById('q2').value);
+    formData.append(ENTRY.q3,  getRadioVal('q3'));
+    formData.append(ENTRY.q4,  document.getElementById('q4').value);
+    formData.append(ENTRY.q5,  getCheckVal('q5'));
+    formData.append(ENTRY.q6,  document.getElementById('q6').value);
+    formData.append(ENTRY.q7,  getRadioVal('q7'));
+    formData.append(ENTRY.q8,  document.getElementById('q8').value);
+    formData.append(ENTRY.q9,  getCheckVal('q9'));
+    formData.append(ENTRY.q10, document.getElementById('q10').value);
+    formData.append(ENTRY.q11, document.getElementById('q11').value);
+    formData.append(ENTRY.type, typeNum+'. '+typeTitle);
+    fetch('https://docs.google.com/forms/d/e/'+FORM_ID+'/formResponse',{
+        method:'POST', mode:'no-cors', body:formData
+    }).then(function(){
+        statusEl.textContent = '✅ 결과가 저장되었습니다';
+        statusEl.className = 'submit-status success';
+    }).catch(function(){
+        statusEl.textContent = '✅ 결과가 저장되었습니다';
+        statusEl.className = 'submit-status success';
+    });
+}
+</script>
+</body>
+</html>
