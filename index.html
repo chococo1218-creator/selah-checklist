@@ -1110,7 +1110,7 @@
         submitToGoogle(typeNum, result.title);
     }
 
-    function submitToGoogle(typeNum, typeTitle) {
+    function submitToGoogle(typeNum, typeTitle) {     const statusEl = document.getElementById('submitStatus');     statusEl.textContent = '결과 저장 중...';      const payload = {         q1:   getCheckValues('q1').join(' / '),         q2:   document.getElementById('q2').value,         q3:   getRadioValue('q3'),         q4:   document.getElementById('q4').value,         q5:   getCheckValues('q5').join(' / '),         q6:   document.getElementById('q6').value,         q7:   getRadioValue('q7'),         q8:   document.getElementById('q8').value,         q9:   getCheckValues('q9').join(' / '),         q10:  document.getElementById('q10').value,         q11:  document.getElementById('q11').value,         type: typeNum + '. ' + typeTitle     };      fetch('https://script.google.com/macros/s/AKfycbxJhGFTrw3-SccRo3qeQ42mvaCRg-012iDhAH82fLCzR1ExlvtYdrKeFp4c1IAd3iDa/exec', {         method: 'POST',         mode: 'no-cors',         headers: {             'Content-Type': 'application/json'         },         body: JSON.stringify(payload)     })     .then(() => {         statusEl.textContent = '✅ 결과가 저장되었습니다';         statusEl.className = 'submit-status success';     })     .catch(() => {         statusEl.textContent = '✅ 결과가 저장되었습니다';         statusEl.className = 'submit-status success';     }); }
         const statusEl = document.getElementById('submitStatus');
         statusEl.textContent = '결과 저장 중...';
 
